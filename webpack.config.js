@@ -3,7 +3,11 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const LIB_PREFIX = 'adpl'
 module.exports = {
-  entry: {main: './main.ts'},
+  mode: 'development',
+  devServer: {
+       contentBase: './dist',
+  },
+  entry: {main: './main.js'},
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
@@ -20,12 +24,12 @@ module.exports = {
         ]
       },
       
-        {
-          test: /\.html$/, exclude: /node_modules/,
-          use: {
-              loader: 'file-loader'
-          }
-      }
+      //   {
+      //     test: /\.html$/, exclude: /node_modules/,
+      //     use: {
+      //         loader: 'file-loader'
+      //     }
+      // }
     ]
   },
   plugins: [
@@ -33,7 +37,7 @@ module.exports = {
       title: 'lion webcomponent library',
       prefix: LIB_PREFIX,
       filename: 'index.html',
-      template: './index.ejs',
+      template: './index.html',
       inject: true
     }),
     
@@ -41,7 +45,22 @@ module.exports = {
   optimization:{
     minimize: false, // <---- disables uglify.
     splitChunks: {
-      chunks: 'all'
+      chunks: 'all',
+      maxInitialRequests: Infinity,
+      minSize: 0,
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name(module) {
+            // get the name. E.g. node_modules/packageName/not/this/part.js
+            // or node_modules/packageName
+            const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+
+            // npm package names are URL-safe, but some servers don't like @ symbols
+            return `npm.${packageName.replace('@', '')}`;
+          },
+        },
+      }
     }
   }
 };
